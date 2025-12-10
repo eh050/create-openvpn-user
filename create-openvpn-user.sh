@@ -1,19 +1,23 @@
 #!/bin/bash
+# ============================================================
+# OpenVPN Client Configuration Generator
+# Automates creation of .ovpn files with embedded certificates
+# ============================================================
 
-# Script to create OpenVPN client configuration file
-# Usage: ./create-client-config.sh clientname
-
+# Input validation
 if [ -z "$1" ]; then
     echo "Usage: $0 <clientname>"
     exit 1
 fi
 
+# Configuration variables
 CLIENT_NAME=$1
 CLIENT_DIR=~/openvpn-clients
 EASYRSA_DIR=~/easy-rsa
 SERVER_IP="YOUR_PUBLIC_IP"  # Change this to your public IP or domain name
 SERVER_PORT="YOUR_SERVER_PORT" # Change this to the port your OpenVPN server is running on
 
+# Generate .ovpn file with embedded certificates
 cat > ${CLIENT_DIR}/${CLIENT_NAME}.ovpn <<EOF
 client
 dev tun
@@ -23,6 +27,8 @@ resolv-retry infinite
 nobind
 persist-key
 persist-tun
+
+# Security configuration
 ca [inline]
 cert [inline]
 key [inline]
@@ -34,21 +40,26 @@ auth SHA256
 allow-compression no
 verb 3
 
+# Embedded CA certificate
 <ca>
 $(cat ${EASYRSA_DIR}/pki/ca.crt)
 </ca>
 
+# Embedded client certificate
 <cert>
 $(cat ${EASYRSA_DIR}/pki/issued/${CLIENT_NAME}.crt)
 </cert>
 
+# Embedded client private key
 <key>
 $(cat ${EASYRSA_DIR}/pki/private/${CLIENT_NAME}.key)
 </key>
 
+# Embedded TLS-auth key
 <tls-auth>
 $(cat /etc/openvpn/server/ta.key)
 </tls-auth>
 EOF
 
 echo "Client configuration created: ${CLIENT_DIR}/${CLIENT_NAME}.ovpn"
+
